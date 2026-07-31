@@ -2,18 +2,20 @@
 Road network definition for the Urban Noise Inspection Environment.
 
 This module defines:
-- Zone types
-- Inspection zones
-- Kigali road network
+- Kigali inspection zones
+- Zone categories
+- Road connections with distances
+- Hidden noise violation states
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List
+from typing import Dict
+import random
 
 
 class ZoneType(Enum):
-    """Types of inspection zones."""
+    """Types of urban inspection zones."""
 
     RESIDENTIAL = "Residential"
     COMMERCIAL = "Commercial"
@@ -25,35 +27,57 @@ class ZoneType(Enum):
 @dataclass
 class InspectionZone:
     """
-    Represents a location that may be inspected.
+    Represents an inspection location.
     """
 
     id: int
     name: str
     zone_type: ZoneType
+
+    # Probability that this location violates noise regulations
     risk_probability: float
+
+    # Coordinates for visualization
     x: float
     y: float
 
-    visited: bool = False
-    violation_detected: bool = False
-
-    neighbours: List[int] = field(default_factory=list)
+    # Runtime states
+    inspected: bool = False
+    has_violation: bool = False
 
 
 class RoadNetwork:
     """
-    Graph representation of the inspection network.
+    Graph representation of Kigali inspection zones.
+
+    Connections are stored as:
+
+    {
+        source_zone:
+            {
+                destination_zone: distance
+            }
+    }
+
+    Distance represents travel cost.
     """
 
     def __init__(self):
+
         self.zones: Dict[int, InspectionZone] = {}
 
+        self.roads: Dict[int, Dict[int, float]] = {}
+
         self._create_zones()
-        self._connect_zones()
+
+        self._create_roads()
+
+
+    # --------------------------------------------------
+    # Create Kigali zones
+    # --------------------------------------------------
 
     def _create_zones(self):
-        """Create Kigali inspection zones."""
 
         self.zones = {
 
@@ -63,7 +87,7 @@ class RoadNetwork:
                 ZoneType.RESIDENTIAL,
                 0.20,
                 4,
-                9,
+                9
             ),
 
             1: InspectionZone(
@@ -72,7 +96,7 @@ class RoadNetwork:
                 ZoneType.COMMERCIAL,
                 0.45,
                 6,
-                8,
+                8
             ),
 
             2: InspectionZone(
@@ -81,7 +105,7 @@ class RoadNetwork:
                 ZoneType.COMMERCIAL,
                 0.50,
                 8,
-                7,
+                7
             ),
 
             3: InspectionZone(
@@ -90,7 +114,7 @@ class RoadNetwork:
                 ZoneType.ENTERTAINMENT,
                 0.85,
                 9,
-                5,
+                5
             ),
 
             4: InspectionZone(
@@ -99,7 +123,7 @@ class RoadNetwork:
                 ZoneType.COMMERCIAL,
                 0.60,
                 10,
-                3,
+                3
             ),
 
             5: InspectionZone(
@@ -108,7 +132,7 @@ class RoadNetwork:
                 ZoneType.RESIDENTIAL,
                 0.25,
                 12,
-                1,
+                1
             ),
 
             6: InspectionZone(
@@ -117,7 +141,7 @@ class RoadNetwork:
                 ZoneType.INDUSTRIAL,
                 0.75,
                 4,
-                3,
+                3
             ),
 
             7: InspectionZone(
@@ -126,7 +150,7 @@ class RoadNetwork:
                 ZoneType.ENTERTAINMENT,
                 0.80,
                 2,
-                2,
+                2
             ),
 
             8: InspectionZone(
@@ -135,7 +159,7 @@ class RoadNetwork:
                 ZoneType.COMMERCIAL,
                 0.55,
                 1,
-                5,
+                5
             ),
 
             9: InspectionZone(
@@ -144,65 +168,133 @@ class RoadNetwork:
                 ZoneType.WORSHIP,
                 0.30,
                 0,
-                7,
+                7
             ),
 
         }
 
-    def _connect_zones(self):
-        """Create road connections."""
 
-        connections = {
+    # --------------------------------------------------
+    # Create road network
+    # --------------------------------------------------
 
-            0: [1, 9],
+    def _create_roads(self):
 
-            1: [0, 2, 6],
+        self.roads = {
 
-            2: [1, 3],
+            0: {
+                1: 3.5,
+                9: 4.0
+            },
 
-            3: [2, 4],
+            1: {
+                0: 3.5,
+                2: 2.8,
+                6: 5.2
+            },
 
-            4: [3, 5],
+            2: {
+                1: 2.8,
+                3: 3.1
+            },
 
-            5: [4],
+            3: {
+                2: 3.1,
+                4: 2.5
+            },
 
-            6: [1, 7],
+            4: {
+                3: 2.5,
+                5: 3.8
+            },
 
-            7: [6, 8],
+            5: {
+                4: 3.8
+            },
 
-            8: [7, 9],
+            6: {
+                1: 5.2,
+                7: 2.9
+            },
 
-            9: [8, 0],
+            7: {
+                6: 2.9,
+                8: 3.0
+            },
+
+            8: {
+                7: 3.0,
+                9: 2.6
+            },
+
+            9: {
+                8: 2.6,
+                0: 4.0
+            }
 
         }
 
-        for zone_id, neighbours in connections.items():
-            self.zones[zone_id].neighbours = neighbours
 
-    def get_zone(self, zone_id: int) -> InspectionZone:
-        """Return a zone."""
+    # --------------------------------------------------
+    # Environment helpers
+    # --------------------------------------------------
 
-        return self.zones[zone_id]
+    def generate_noise_events(self):
+        """
+        Generate hidden noise violations.
 
-    def get_neighbours(self, zone_id: int) -> List[int]:
-        """Return connected zones."""
-
-        return self.zones[zone_id].neighbours
-
-    def number_of_zones(self) -> int:
-        """Return total zones."""
-
-        return len(self.zones)
-
-    def reset(self):
-        """Reset environment state."""
+        The agent does not know these values.
+        It must inspect locations to discover them.
+        """
 
         for zone in self.zones.values():
 
-            zone.visited = False
-            zone.violation_detected = False
+            zone.has_violation = (
+                random.random()
+                < zone.risk_probability
+            )
+
+
+    def get_zone(self, zone_id: int):
+
+        return self.zones[zone_id]
+
+
+    def get_connections(self, zone_id: int):
+
+        return self.roads[zone_id]
+
+
+    def get_distance(
+        self,
+        start_zone: int,
+        destination_zone: int
+    ):
+
+        return self.roads[start_zone][destination_zone]
+
+
+    def number_of_zones(self):
+
+        return len(self.zones)
+
+
+    def reset(self):
+        """
+        Reset episode state.
+        """
+
+        for zone in self.zones.values():
+
+            zone.inspected = False
+            zone.has_violation = False
+
 
     def __repr__(self):
 
-        return f"RoadNetwork(zones={len(self.zones)})"
-    
+        return (
+            f"RoadNetwork("
+            f"zones={len(self.zones)}, "
+            f"roads={sum(len(x) for x in self.roads.values())}"
+            f")"
+        )

@@ -1,0 +1,30 @@
+[project]
+name = "cyubahiro-david-rl-summative"
+version = "0.1.0"
+description = "Mission-Based Reinforcement Learning for Urban Noise Inspection"
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    "gymnasium>=1.3.0",
+    "numpy>=2.5.1",
+    "stable-baselines3>=2.9.0",
+    "matplotlib>=3.10.0",
+    "networkx>=3.6.0",
+    "pyyaml>=6.0.0",
+    "pygame>=2.6.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "environment",
+    "training",
+    "evaluation",
+    "api",
+]
