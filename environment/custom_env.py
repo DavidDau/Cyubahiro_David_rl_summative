@@ -1,15 +1,10 @@
 """
-Custom Gymnasium environment for Kigali Urban Noise Inspection.
-
-The RL agent represents an environmental inspection vehicle.
-Its goal is to discover noise regulation violations while
-minimizing travel cost and operational resource usage.
+Custom Gymnasium Environment:
+Kigali Urban Noise Inspection Reinforcement Learning Environment
 """
 
-import random
-
-import gymnasium as gym
 import numpy as np
+import gymnasium as gym
 
 from gymnasium import spaces
 
@@ -18,7 +13,8 @@ from environment.map import RoadNetwork
 
 class NoiseInspectionEnv(gym.Env):
     """
-    Reinforcement learning environment for urban noise inspection.
+    RL environment where an inspection vehicle navigates Kigali zones
+    to detect noise pollution violations.
     """
 
     metadata = {
@@ -26,48 +22,34 @@ class NoiseInspectionEnv(gym.Env):
     }
 
 
-    def __init__(self):
+    def __init__(self, render_mode=None):
 
         super().__init__()
 
-
-        # -----------------------------
-        # Environment
-        # -----------------------------
+        self.render_mode = render_mode
 
         self.network = RoadNetwork()
 
-
         # Mission constraints
-
         self.max_time = 50
-
         self.max_battery = 100
 
 
-
-        # -----------------------------
-        # Action Space
-        #
-        # 0-9   -> Move to zone
-        # 10    -> Inspect current zone
-        # 11    -> Wait
-        # -----------------------------
+        # Actions:
+        # 0-9   : Move to zone
+        # 10    : Inspect current zone
+        # 11    : Wait
 
         self.action_space = spaces.Discrete(12)
 
 
-
-        # -----------------------------
-        # Observation Space
-        #
-        # 0 Current zone
-        # 1 Battery
-        # 2 Remaining time
-        # 3 Violations found
-        # 4 Inspected zones
-        # 5 Current zone risk
-        # -----------------------------
+        # Observation:
+        # current_zone
+        # battery
+        # remaining_time
+        # violations_found
+        # inspected_zones
+        # current_zone_risk
 
         self.observation_space = spaces.Box(
             low=0,
@@ -77,13 +59,18 @@ class NoiseInspectionEnv(gym.Env):
         )
 
 
-        self.reset()
+        self.current_zone = 0
+        self.battery = self.max_battery
+        self.remaining_time = self.max_time
+        self.violations_found = 0
 
 
+        self.renderer = None
 
-    # ==================================================
-    # RESET
-    # ==================================================
+
+    # -------------------------------------------------
+    # Reset Environment
+    # -------------------------------------------------
 
     def reset(self, seed=None, options=None):
 
@@ -92,41 +79,25 @@ class NoiseInspectionEnv(gym.Env):
 
         self.network.reset()
 
-
-        # Generate hidden violations
-
         self.network.generate_noise_events()
 
 
-
-        # Agent starts at inspection base
-
         self.current_zone = 0
-
-
-        self.remaining_time = self.max_time
-
 
         self.battery = self.max_battery
 
+        self.remaining_time = self.max_time
 
         self.violations_found = 0
 
 
-        self.total_reward = 0
+        return self._get_observation(), {}
 
 
 
-        observation = self._get_observation()
-
-
-        return observation, {}
-
-
-
-    # ==================================================
-    # STEP
-    # ==================================================
+    # -------------------------------------------------
+    # Step
+    # -------------------------------------------------
 
     def step(self, action):
 
@@ -135,14 +106,13 @@ class NoiseInspectionEnv(gym.Env):
 
         terminated = False
 
+        truncated = False
 
 
-        # --------------------------------------
-        # MOVE ACTION
-        # --------------------------------------
+
+        # Move Action
 
         if action < 10:
-
 
             destination = action
 
@@ -150,6 +120,7 @@ class NoiseInspectionEnv(gym.Env):
             if destination in self.network.get_connections(
                 self.current_zone
             ):
+
 
                 distance = self.network.get_distance(
                     self.current_zone,
@@ -162,26 +133,20 @@ class NoiseInspectionEnv(gym.Env):
 
                 self.battery -= distance * 2
 
-
                 self.remaining_time -= distance
 
 
-
-                reward -= distance
+                reward -= 2
 
 
 
             else:
 
-                # Invalid road
-
-                reward -= 25
+                reward -= 50
 
 
 
-        # --------------------------------------
-        # INSPECT ACTION
-        # --------------------------------------
+        # Inspect Action
 
         elif action == 10:
 
@@ -214,11 +179,10 @@ class NoiseInspectionEnv(gym.Env):
 
 
 
-        # --------------------------------------
-        # WAIT ACTION
-        # --------------------------------------
+        # Wait Action
 
         elif action == 11:
+
 
             reward -= 2
 
@@ -226,26 +190,15 @@ class NoiseInspectionEnv(gym.Env):
 
 
 
-        # --------------------------------------
-        # Mission Update
-        # --------------------------------------
-
-        self.total_reward += reward
-
-
-
-        # Battery drain
+        # Resource consumption
 
         self.battery -= 1
-
 
         self.remaining_time -= 1
 
 
 
-        # --------------------------------------
-        # Termination
-        # --------------------------------------
+        # Terminal conditions
 
         if self.battery <= 0:
 
@@ -277,7 +230,7 @@ class NoiseInspectionEnv(gym.Env):
 
         info = {
 
-            "current_zone":
+            "zone":
                 self.current_zone,
 
             "violations":
@@ -290,7 +243,7 @@ class NoiseInspectionEnv(gym.Env):
                 self.remaining_time,
 
             "reward":
-                self.total_reward
+                reward
 
         }
 
@@ -300,34 +253,17 @@ class NoiseInspectionEnv(gym.Env):
             observation,
             reward,
             terminated,
-            False,
+            truncated,
             info
         )
 
 
 
-    # ==================================================
-    # HELPERS
-    # ==================================================
-
-    def _mission_complete(self):
-
-        inspected = 0
-
-
-        for zone in self.network.zones.values():
-
-            if zone.inspected:
-
-                inspected += 1
-
-
-        return inspected == self.network.number_of_zones()
-
-
+    # -------------------------------------------------
+    # Observation
+    # -------------------------------------------------
 
     def _get_observation(self):
-
 
         zone = self.network.get_zone(
             self.current_zone
@@ -353,63 +289,57 @@ class NoiseInspectionEnv(gym.Env):
             ],
 
             dtype=np.float32
-
         )
 
 
+
+    # -------------------------------------------------
+    # Helpers
+    # -------------------------------------------------
 
     def _number_inspected(self):
 
-        count = 0
+        return sum(
 
+            zone.inspected
 
-        for zone in self.network.zones.values():
+            for zone in self.network.zones.values()
 
-            if zone.inspected:
-
-                count += 1
-
-
-        return count
+        )
 
 
 
-    # ==================================================
-    # Visualization Placeholder
-    # ==================================================
+    def _mission_complete(self):
+
+        return (
+
+            self._number_inspected()
+
+            == self.network.number_of_zones()
+
+        )
+
+
+
+    # -------------------------------------------------
+    # Rendering
+    # -------------------------------------------------
 
     def render(self):
 
-        zone = self.network.get_zone(
-            self.current_zone
-        )
+        if self.renderer is None:
+
+            from environment.rendering import NoiseRenderer
+
+            self.renderer = NoiseRenderer()
 
 
-        print("--------------------------------")
+        return self.renderer.render(self)
 
-        print(
-            "Current Zone:",
-            zone.name
-        )
 
-        print(
-            "Battery:",
-            self.battery
-        )
 
-        print(
-            "Time Remaining:",
-            self.remaining_time
-        )
+    def close(self):
 
-        print(
-            "Violations Found:",
-            self.violations_found
-        )
+        if self.renderer:
 
-        print(
-            "Reward:",
-            self.total_reward
-        )
-
-        print("--------------------------------")
+            self.renderer.close()
