@@ -1,21 +1,24 @@
 """
 Road network definition for the Urban Noise Inspection Environment.
 
-This module defines:
+Defines:
 - Kigali inspection zones
 - Zone categories
 - Road connections with distances
 - Hidden noise violation states
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict
+from typing import Dict, List
 import random
 
 
+
 class ZoneType(Enum):
-    """Types of urban inspection zones."""
+    """
+    Types of urban inspection zones.
+    """
 
     RESIDENTIAL = "Residential"
     COMMERCIAL = "Commercial"
@@ -24,42 +27,41 @@ class ZoneType(Enum):
     WORSHIP = "Worship"
 
 
+
+
 @dataclass
 class InspectionZone:
     """
-    Represents an inspection location.
+    Represents a Kigali inspection location.
     """
 
     id: int
     name: str
     zone_type: ZoneType
 
-    # Probability that this location violates noise regulations
     risk_probability: float
 
-    # Coordinates for visualization
     x: float
     y: float
 
-    # Runtime states
-    inspected: bool = False
+    visited: bool = False
+
+    violation_detected: bool = False
+
     has_violation: bool = False
+
+    neighbours: List[int] = field(
+        default_factory=list
+    )
+
+
 
 
 class RoadNetwork:
     """
     Graph representation of Kigali inspection zones.
 
-    Connections are stored as:
-
-    {
-        source_zone:
-            {
-                destination_zone: distance
-            }
-    }
-
-    Distance represents travel cost.
+    Roads store travel distances.
     """
 
     def __init__(self):
@@ -72,9 +74,12 @@ class RoadNetwork:
 
         self._create_roads()
 
+        self._update_neighbours()
+
+
 
     # --------------------------------------------------
-    # Create Kigali zones
+    # Kigali inspection zones
     # --------------------------------------------------
 
     def _create_zones(self):
@@ -90,6 +95,7 @@ class RoadNetwork:
                 9
             ),
 
+
             1: InspectionZone(
                 1,
                 "Kimihurura",
@@ -98,6 +104,7 @@ class RoadNetwork:
                 6,
                 8
             ),
+
 
             2: InspectionZone(
                 2,
@@ -108,6 +115,7 @@ class RoadNetwork:
                 7
             ),
 
+
             3: InspectionZone(
                 3,
                 "Amahoro",
@@ -116,6 +124,7 @@ class RoadNetwork:
                 9,
                 5
             ),
+
 
             4: InspectionZone(
                 4,
@@ -126,6 +135,7 @@ class RoadNetwork:
                 3
             ),
 
+
             5: InspectionZone(
                 5,
                 "Kanombe",
@@ -134,6 +144,7 @@ class RoadNetwork:
                 12,
                 1
             ),
+
 
             6: InspectionZone(
                 6,
@@ -144,6 +155,7 @@ class RoadNetwork:
                 3
             ),
 
+
             7: InspectionZone(
                 7,
                 "Nyamirambo",
@@ -152,6 +164,7 @@ class RoadNetwork:
                 2,
                 2
             ),
+
 
             8: InspectionZone(
                 8,
@@ -162,6 +175,7 @@ class RoadNetwork:
                 5
             ),
 
+
             9: InspectionZone(
                 9,
                 "Kimisagara",
@@ -169,13 +183,15 @@ class RoadNetwork:
                 0.30,
                 0,
                 7
-            ),
+            )
 
         }
 
 
+
+
     # --------------------------------------------------
-    # Create road network
+    # Road connections
     # --------------------------------------------------
 
     def _create_roads(self):
@@ -187,45 +203,54 @@ class RoadNetwork:
                 9: 4.0
             },
 
+
             1: {
                 0: 3.5,
                 2: 2.8,
                 6: 5.2
             },
 
+
             2: {
                 1: 2.8,
                 3: 3.1
             },
+
 
             3: {
                 2: 3.1,
                 4: 2.5
             },
 
+
             4: {
                 3: 2.5,
                 5: 3.8
             },
 
+
             5: {
                 4: 3.8
             },
+
 
             6: {
                 1: 5.2,
                 7: 2.9
             },
 
+
             7: {
                 6: 2.9,
                 8: 3.0
             },
 
+
             8: {
                 7: 3.0,
                 9: 2.6
             },
+
 
             9: {
                 8: 2.6,
@@ -235,34 +260,66 @@ class RoadNetwork:
         }
 
 
+
+    def _update_neighbours(self):
+
+        for zone_id, connections in self.roads.items():
+
+            self.zones[zone_id].neighbours = list(
+                connections.keys()
+            )
+
+
+
     # --------------------------------------------------
-    # Environment helpers
+    # Environment functions
     # --------------------------------------------------
 
     def generate_noise_events(self):
-        """
-        Generate hidden noise violations.
 
-        The agent does not know these values.
-        It must inspect locations to discover them.
+        """
+        Randomly generates hidden violations.
+
+        The agent discovers these only after inspection.
         """
 
         for zone in self.zones.values():
 
             zone.has_violation = (
+
                 random.random()
+
                 < zone.risk_probability
+
             )
 
 
-    def get_zone(self, zone_id: int):
+
+    def get_zone(
+        self,
+        zone_id: int
+    ):
 
         return self.zones[zone_id]
 
 
-    def get_connections(self, zone_id: int):
+
+    def get_connections(
+        self,
+        zone_id: int
+    ):
 
         return self.roads[zone_id]
+
+
+
+    def get_neighbours(
+        self,
+        zone_id: int
+    ):
+
+        return self.zones[zone_id].neighbours
+
 
 
     def get_distance(
@@ -274,27 +331,32 @@ class RoadNetwork:
         return self.roads[start_zone][destination_zone]
 
 
+
     def number_of_zones(self):
 
         return len(self.zones)
 
 
+
     def reset(self):
-        """
-        Reset episode state.
-        """
 
         for zone in self.zones.values():
 
-            zone.inspected = False
+            zone.visited = False
+
+            zone.violation_detected = False
+
             zone.has_violation = False
+
 
 
     def __repr__(self):
 
         return (
+
             f"RoadNetwork("
             f"zones={len(self.zones)}, "
             f"roads={sum(len(x) for x in self.roads.values())}"
             f")"
+
         )

@@ -1,75 +1,124 @@
 """
-Pygame visualization for Kigali Urban Noise Inspection Environment.
+Visualization renderer for Kigali Noise Inspection Environment.
+
+Uses pygame to display:
+- Inspection zones
+- Roads
+- Agent position
+- Inspected locations
+- Detected violations
 """
 
 import pygame
 
+from environment.map import RoadNetwork
+
+
+
+WIDTH = 800
+HEIGHT = 600
+
+BACKGROUND = (240, 240, 240)
+
+ROAD_COLOR = (100, 100, 100)
+
+ZONE_COLOR = (50, 150, 255)
+
+AGENT_COLOR = (255, 50, 50)
+
+INSPECTED_COLOR = (50, 200, 50)
+
+VIOLATION_COLOR = (255, 165, 0)
+
+
 
 class NoiseRenderer:
+
 
     def __init__(self):
 
         pygame.init()
 
-        self.width = 900
-        self.height = 700
 
         self.screen = pygame.display.set_mode(
-            (self.width, self.height)
+
+            (WIDTH, HEIGHT)
+
         )
 
+
         pygame.display.set_caption(
-            "Kigali Urban Noise Inspection Simulation"
+
+            "Kigali Urban Noise Inspection RL Simulation"
+
         )
+
 
         self.clock = pygame.time.Clock()
 
-        self.font = pygame.font.SysFont(
-            "Arial",
-            16
-        )
 
-
-        self.scale = 45
-        self.offset_x = 100
-        self.offset_y = 80
+        self.network = RoadNetwork()
 
 
 
-    def _convert_position(self, x, y):
+    def scale_position(
+        self,
+        x,
+        y
+    ):
 
         return (
 
-            int(self.offset_x + x * self.scale),
+            int(x * 50 + 100),
 
-            int(self.offset_y + y * self.scale)
+            int(HEIGHT - (y * 50 + 100))
 
         )
 
 
 
-    def draw_roads(self, env):
+    def draw_network(
+        self,
+        current_zone=None
+    ):
 
-        for start, connections in env.network.roads.items():
 
-            start_zone = env.network.get_zone(start)
+        self.screen.fill(
 
-            start_position = self._convert_position(
-                start_zone.x,
-                start_zone.y
+            BACKGROUND
+
+        )
+
+
+        # Draw roads
+
+        for zone in self.network.zones.values():
+
+            start = self.scale_position(
+
+                zone.x,
+
+                zone.y
+
             )
 
 
-            for destination in connections:
+            for neighbour in zone.neighbours:
 
-                end_zone = env.network.get_zone(
-                    destination
+
+                target_zone = self.network.get_zone(
+
+                    neighbour
+
                 )
 
 
-                end_position = self._convert_position(
-                    end_zone.x,
-                    end_zone.y
+                end = self.scale_position(
+
+                    target_zone.x,
+
+                    target_zone.y
+
                 )
 
 
@@ -77,11 +126,11 @@ class NoiseRenderer:
 
                     self.screen,
 
-                    (150,150,150),
+                    ROAD_COLOR,
 
-                    start_position,
+                    start,
 
-                    end_position,
+                    end,
 
                     3
 
@@ -89,32 +138,33 @@ class NoiseRenderer:
 
 
 
-    def draw_zones(self, env):
+        # Draw zones
 
-        for zone in env.network.zones.values():
+        for zone in self.network.zones.values():
 
-            position = self._convert_position(
+
+            position = self.scale_position(
+
                 zone.x,
+
                 zone.y
+
             )
 
 
-            radius = 20
+            color = ZONE_COLOR
 
 
-            if zone.id == env.current_zone:
 
-                color = (0,255,0)
+            if zone.visited:
 
-
-            elif zone.inspected:
-
-                color = (0,150,255)
+                color = INSPECTED_COLOR
 
 
-            else:
 
-                color = (200,200,200)
+            if zone.violation_detected:
+
+                color = VIOLATION_COLOR
 
 
 
@@ -126,12 +176,22 @@ class NoiseRenderer:
 
                 position,
 
-                radius
+                18
 
             )
 
 
-            label = self.font.render(
+
+            font = pygame.font.Font(
+
+                None,
+
+                18
+
+            )
+
+
+            label = font.render(
 
                 zone.name,
 
@@ -147,114 +207,53 @@ class NoiseRenderer:
                 label,
 
                 (
-                    position[0]-30,
-                    position[1]+25
+
+                    position[0]-25,
+
+                    position[1]+22
+
                 )
 
             )
 
 
 
-            if zone.inspected and zone.has_violation:
+        # Draw agent
 
-                violation = self.font.render(
-
-                    "Noise Violation",
-
-                    True,
-
-                    (255,0,0)
-
-                )
-
-                self.screen.blit(
-
-                    violation,
-
-                    (
-                        position[0]-45,
-                        position[1]-35
-                    )
-
-                )
+        if current_zone is not None:
 
 
+            zone = self.network.get_zone(
 
-    def draw_information(self, env):
-
-        info = [
-
-            f"Current Zone: {env.network.get_zone(env.current_zone).name}",
-
-            f"Battery: {env.battery}",
-
-            f"Time: {env.remaining_time}",
-
-            f"Violations Found: {env.violations_found}"
-
-        ]
-
-
-        y = 20
-
-
-        for text in info:
-
-            surface = self.font.render(
-
-                text,
-
-                True,
-
-                (0,0,0)
+                current_zone
 
             )
 
-            self.screen.blit(
 
-                surface,
+            position = self.scale_position(
 
-                (20,y)
+                zone.x,
+
+                zone.y
 
             )
 
-            y += 25
 
+            pygame.draw.circle(
 
+                self.screen,
 
-    def render(self, env):
+                AGENT_COLOR,
 
-        running = True
+                position,
 
+                12
 
-        for event in pygame.event.get():
-
-            if event.type == pygame.QUIT:
-
-                running = False
-
-
-
-        self.screen.fill(
-            (240,240,240)
-        )
-
-
-        self.draw_roads(env)
-
-        self.draw_zones(env)
-
-        self.draw_information(env)
+            )
 
 
 
         pygame.display.update()
-
-
-        self.clock.tick(10)
-
-
-        return running
 
 
 
