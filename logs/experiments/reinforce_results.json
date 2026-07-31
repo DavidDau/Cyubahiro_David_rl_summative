@@ -1,0 +1,92 @@
+[
+    {
+        "run": 1,
+        "hyperparameters": {
+            "learning_rate": 0.001,
+            "gamma": 0.9,
+            "episodes": 300
+        },
+        "average_reward": -150.0
+    },
+    {
+        "run": 2,
+        "hyperparameters": {
+            "learning_rate": 0.001,
+            "gamma": 0.95,
+            "episodes": 500
+        },
+        "average_reward": -562.0
+    },
+    {
+        "run": 3,
+        "hyperparameters": {
+            "learning_rate": 0.0005,
+            "gamma": 0.99,
+            "episodes": 500
+        },
+        "average_reward": -150.0
+    },
+    {
+        "run": 4,
+        "hyperparameters": {
+            "learning_rate": 0.0003,
+            "gamma": 0.99,
+            "episodes": 700
+        },
+        "average_reward": -554.0
+    },
+    {
+        "run": 5,
+        "hyperparameters": {
+            "learning_rate": 0.0001,
+            "gamma": 0.95,
+            "episodes": 500
+        },
+        "average_reward": -2434.0
+    },
+    {
+        "run": 6,
+        "hyperparameters": {
+            "learning_rate": 0.0001,
+            "gamma": 0.999,
+            "episodes": 700
+        },
+        "average_reward": -2402.0
+    },
+    {
+        "run": 7,
+        "hyperparameters": {
+            "learning_rate": 0.0007,
+            "gamma": 0.97,
+            "episodes": 400
+        },
+        "average_reward": -150.0
+    },
+    {
+        "run": 8,
+        "hyperparameters": {
+            "learning_rate": 0.0002,
+            "gamma": 0.98,
+            "episodes": 600
+        },
+        "average_reward": -150.0
+    },
+    {
+        "run": 9,
+        "hyperparameters": {
+            "learning_rate": 0.0008,
+            "gamma": 0.92,
+            "episodes": 300
+        },
+        "average_reward": -570.0
+    },
+    {
+        "run": 10,
+        "hyperparameters": {
+            "learning_rate": 5e-05,
+            "gamma": 0.99,
+            "episodes": 800
+        },
+        "average_reward": -96.0
+    }
+]

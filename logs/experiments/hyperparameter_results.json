@@ -1,0 +1,86 @@
+{
+    "DQN": [
+        {
+            "experiment": 1,
+            "parameters": {
+                "learning_rate": 0.001,
+                "buffer_size": 50000,
+                "gamma": 0.95
+            },
+            "average_reward": -148.0
+        },
+        {
+            "experiment": 2,
+            "parameters": {
+                "learning_rate": 0.0005,
+                "buffer_size": 100000,
+                "gamma": 0.99
+            },
+            "average_reward": -150.0
+        },
+        {
+            "experiment": 3,
+            "parameters": {
+                "learning_rate": 0.0001,
+                "buffer_size": 50000,
+                "gamma": 0.9
+            },
+            "average_reward": -150.0
+        }
+    ],
+    "PPO": [
+        {
+            "experiment": 1,
+            "parameters": {
+                "learning_rate": 0.001,
+                "gamma": 0.99,
+                "clip_range": 0.2
+            },
+            "average_reward": -403.6
+        },
+        {
+            "experiment": 2,
+            "parameters": {
+                "learning_rate": 0.0003,
+                "gamma": 0.95,
+                "clip_range": 0.1
+            },
+            "average_reward": -452.0
+        },
+        {
+            "experiment": 3,
+            "parameters": {
+                "learning_rate": 0.0001,
+                "gamma": 0.999,
+                "clip_range": 0.3
+            },
+            "average_reward": -562.0
+        }
+    ],
+    "A2C": [
+        {
+            "experiment": 1,
+            "parameters": {
+                "learning_rate": 0.001,
+                "gamma": 0.99
+            },
+            "average_reward": -150.0
+        },
+        {
+            "experiment": 2,
+            "parameters": {
+                "learning_rate": 0.0007,
+                "gamma": 0.95
+            },
+            "average_reward": -150.0
+        },
+        {
+            "experiment": 3,
+            "parameters": {
+                "learning_rate": 0.0003,
+                "gamma": 0.999
+            },
+            "average_reward": -562.0
+        }
+    ]
+}

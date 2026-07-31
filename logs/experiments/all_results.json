@@ -1,0 +1,268 @@
+{
+    "DQN": [
+        {
+            "run": 1,
+            "hyperparameters": {
+                "learning_rate": 0.001,
+                "gamma": 0.9,
+                "buffer_size": 50000
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 2,
+            "hyperparameters": {
+                "learning_rate": 0.001,
+                "gamma": 0.95,
+                "buffer_size": 100000
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 3,
+            "hyperparameters": {
+                "learning_rate": 0.0005,
+                "gamma": 0.95,
+                "buffer_size": 50000
+            },
+            "average_reward": -148.0
+        },
+        {
+            "run": 4,
+            "hyperparameters": {
+                "learning_rate": 0.0005,
+                "gamma": 0.99,
+                "buffer_size": 100000
+            },
+            "average_reward": -148.0
+        },
+        {
+            "run": 5,
+            "hyperparameters": {
+                "learning_rate": 0.0003,
+                "gamma": 0.9,
+                "buffer_size": 50000
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 6,
+            "hyperparameters": {
+                "learning_rate": 0.0003,
+                "gamma": 0.99,
+                "buffer_size": 200000
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 7,
+            "hyperparameters": {
+                "learning_rate": 0.0001,
+                "gamma": 0.95,
+                "buffer_size": 100000
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 8,
+            "hyperparameters": {
+                "learning_rate": 0.0001,
+                "gamma": 0.99,
+                "buffer_size": 200000
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 9,
+            "hyperparameters": {
+                "learning_rate": 0.0007,
+                "gamma": 0.97,
+                "buffer_size": 50000
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 10,
+            "hyperparameters": {
+                "learning_rate": 0.0002,
+                "gamma": 0.92,
+                "buffer_size": 100000
+            },
+            "average_reward": -150.0
+        }
+    ],
+    "PPO": [
+        {
+            "run": 1,
+            "hyperparameters": {
+                "learning_rate": 0.001,
+                "gamma": 0.9,
+                "clip_range": 0.1
+            },
+            "average_reward": -507.2
+        },
+        {
+            "run": 2,
+            "hyperparameters": {
+                "learning_rate": 0.001,
+                "gamma": 0.95,
+                "clip_range": 0.2
+            },
+            "average_reward": -546.0
+        },
+        {
+            "run": 3,
+            "hyperparameters": {
+                "learning_rate": 0.0005,
+                "gamma": 0.99,
+                "clip_range": 0.2
+            },
+            "average_reward": -546.0
+        },
+        {
+            "run": 4,
+            "hyperparameters": {
+                "learning_rate": 0.0003,
+                "gamma": 0.99,
+                "clip_range": 0.3
+            },
+            "average_reward": -418.0
+        },
+        {
+            "run": 5,
+            "hyperparameters": {
+                "learning_rate": 0.0001,
+                "gamma": 0.95,
+                "clip_range": 0.1
+            },
+            "average_reward": -546.0
+        },
+        {
+            "run": 6,
+            "hyperparameters": {
+                "learning_rate": 0.0001,
+                "gamma": 0.999,
+                "clip_range": 0.3
+            },
+            "average_reward": -520.0
+        },
+        {
+            "run": 7,
+            "hyperparameters": {
+                "learning_rate": 0.0007,
+                "gamma": 0.97,
+                "clip_range": 0.2
+            },
+            "average_reward": -266.0
+        },
+        {
+            "run": 8,
+            "hyperparameters": {
+                "learning_rate": 0.0002,
+                "gamma": 0.98,
+                "clip_range": 0.15
+            },
+            "average_reward": -471.2
+        },
+        {
+            "run": 9,
+            "hyperparameters": {
+                "learning_rate": 0.0008,
+                "gamma": 0.92,
+                "clip_range": 0.25
+            },
+            "average_reward": -426.4
+        },
+        {
+            "run": 10,
+            "hyperparameters": {
+                "learning_rate": 5e-05,
+                "gamma": 0.99,
+                "clip_range": 0.1
+            },
+            "average_reward": -554.0
+        }
+    ],
+    "A2C": [
+        {
+            "run": 1,
+            "hyperparameters": {
+                "learning_rate": 0.001,
+                "gamma": 0.9
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 2,
+            "hyperparameters": {
+                "learning_rate": 0.001,
+                "gamma": 0.99
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 3,
+            "hyperparameters": {
+                "learning_rate": 0.0007,
+                "gamma": 0.95
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 4,
+            "hyperparameters": {
+                "learning_rate": 0.0007,
+                "gamma": 0.999
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 5,
+            "hyperparameters": {
+                "learning_rate": 0.0005,
+                "gamma": 0.97
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 6,
+            "hyperparameters": {
+                "learning_rate": 0.0003,
+                "gamma": 0.99
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 7,
+            "hyperparameters": {
+                "learning_rate": 0.0002,
+                "gamma": 0.95
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 8,
+            "hyperparameters": {
+                "learning_rate": 0.0001,
+                "gamma": 0.999
+            },
+            "average_reward": -554.0
+        },
+        {
+            "run": 9,
+            "hyperparameters": {
+                "learning_rate": 0.0008,
+                "gamma": 0.92
+            },
+            "average_reward": -150.0
+        },
+        {
+            "run": 10,
+            "hyperparameters": {
+                "learning_rate": 5e-05,
+                "gamma": 0.98
+            },
+            "average_reward": -562.0
+        }
+    ]
+}
