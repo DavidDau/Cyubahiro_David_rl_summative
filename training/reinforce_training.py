@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from environment.custom_env import NoiseInspectionEnv
-
+from utils.config_loader import load_config
 
 
 MODEL_PATH = "models/reinforce"
@@ -56,6 +56,10 @@ class PolicyNetwork(nn.Module):
 # Training
 # ---------------------------------------------
 
+config = load_config(
+    "configs/reinforce.yaml"
+)
+
 def train_reinforce():
 
     os.makedirs(
@@ -86,17 +90,15 @@ def train_reinforce():
 
         policy.parameters(),
 
-        lr=0.001
+         lr=config["learning_rate"]
 
     )
 
 
 
-    episodes = 500
+    episodes = config["episodes"]
 
-
-
-    gamma = 0.99
+    gamma = config["gamma"]
 
 
 

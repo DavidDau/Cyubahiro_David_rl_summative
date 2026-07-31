@@ -9,6 +9,7 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import EvalCallback
 
 from environment.custom_env import NoiseInspectionEnv
+from utils.config_loader import load_config
 
 
 
@@ -53,31 +54,33 @@ def train_dqn():
 
     )
 
-
+    config = load_config(
+        "configs/dqn.yaml"
+    )
 
     model = DQN(
 
-        policy="MlpPolicy",
+            policy="MlpPolicy",
 
-        env=env,
+            env=env,
 
-        learning_rate=0.0005,
+            learning_rate=config["learning_rate"],
 
-        buffer_size=50000,
+            buffer_size=config["buffer_size"],
 
-        learning_starts=1000,
+            learning_starts=config["learning_starts"],
 
-        batch_size=64,
+            batch_size=config["batch_size"],
 
-        gamma=0.95,
+            gamma=config["gamma"],
 
-        exploration_fraction=0.3,
+            exploration_fraction=config["exploration_fraction"],
 
-        exploration_final_eps=0.05,
+            exploration_final_eps=config["exploration_final_eps"],
 
-        verbose=1
+            verbose=1
 
-    )
+        )
 
 
 

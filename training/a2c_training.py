@@ -9,7 +9,7 @@ from stable_baselines3 import A2C
 from stable_baselines3.common.callbacks import EvalCallback
 
 from environment.custom_env import NoiseInspectionEnv
-
+from utils.config_loader import load_config
 
 
 MODEL_PATH = "models/a2c"
@@ -54,6 +54,8 @@ def train_a2c():
     )
 
 
+    config = load_config(
+    "configs/a2c.yaml" )
 
     model = A2C(
 
@@ -61,19 +63,19 @@ def train_a2c():
 
         env=env,
 
-        learning_rate=0.0007,
+        learning_rate=config["learning_rate"],
 
-        n_steps=5,
+        n_steps=config["n_steps"],
 
-        gamma=0.99,
+        gamma=config["gamma"],
 
-        gae_lambda=1.0,
+        gae_lambda=config["gae_lambda"],
 
-        ent_coef=0.01,
+        ent_coef=config["entropy_coefficient"],
 
-        vf_coef=0.5,
+        vf_coef=config["value_function_coefficient"],
 
-        max_grad_norm=0.5,
+        max_grad_norm=config["max_gradient_norm"],
 
         verbose=1
 

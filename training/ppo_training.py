@@ -9,7 +9,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback
 
 from environment.custom_env import NoiseInspectionEnv
-
+from utils.config_loader import load_config
 
 
 MODEL_PATH = "models/ppo"
@@ -54,32 +54,34 @@ def train_ppo():
     )
 
 
-
+    config = load_config(
+    "configs/ppo.yaml"
+    )
     model = PPO(
 
-        policy="MlpPolicy",
+    policy="MlpPolicy",
 
-        env=env,
+    env=env,
 
-        learning_rate=0.0003,
+    learning_rate=config["learning_rate"],
 
-        n_steps=2048,
+    n_steps=config["n_steps"],
 
-        batch_size=64,
+    batch_size=config["batch_size"],
 
-        n_epochs=10,
+    n_epochs=config["n_epochs"],
 
-        gamma=0.99,
+    gamma=config["gamma"],
 
-        gae_lambda=0.95,
+    gae_lambda=config["gae_lambda"],
 
-        clip_range=0.2,
+    clip_range=config["clip_range"],
 
-        ent_coef=0.01,
+    ent_coef=config["entropy_coefficient"],
 
-        verbose=1
+    verbose=1
 
-    )
+)
 
 
 
