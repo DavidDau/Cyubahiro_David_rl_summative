@@ -1,219 +1,227 @@
 """
-Advanced visualization plots for RL experiments.
+Advanced visualization tools for RL model comparison.
 
 Generates:
 - Reward comparison
-- Hyperparameter convergence curves
-- Algorithm performance comparison
+- Mission completion comparison
+- Violation detection comparison
+- Algorithm summary plots
 """
+
 
 import os
 import json
-
+import numpy as np
 import matplotlib.pyplot as plt
 
 
 
-INPUT_PATH = "logs/experiments"
+RESULT_PATH = "logs/experiments"
 
 OUTPUT_PATH = "assets/plots"
 
 
 
 os.makedirs(
-
     OUTPUT_PATH,
-
     exist_ok=True
-
 )
 
 
 
 def load_results():
 
-    with open(
-
-        f"{INPUT_PATH}/all_results.json",
-
-        "r"
-
-    ) as file:
-
-        algorithm_results = json.load(file)
+    results = {}
 
 
+    files = {
 
-    with open(
+        "DQN":
+            "all_results.json",
 
-        f"{INPUT_PATH}/reinforce_results.json",
+        "REINFORCE":
+            "reinforce_results.json"
 
-        "r"
-
-    ) as file:
-
-        algorithm_results["REINFORCE"] = json.load(file)
-
+    }
 
 
-    return algorithm_results
+    # Load combined Stable Baselines results
 
-
-
-
-def plot_reward_curves(results):
-
-
-    plt.figure(
-        figsize=(10,6)
+    path = os.path.join(
+        RESULT_PATH,
+        "all_results.json"
     )
 
+
+    if os.path.exists(path):
+
+        with open(path, "r") as file:
+
+            data = json.load(file)
+
+
+            for algorithm, values in data.items():
+
+                results[algorithm] = values
+
+
+
+    # Load REINFORCE
+
+    path = os.path.join(
+
+        RESULT_PATH,
+
+        "reinforce_results.json"
+
+    )
+
+
+    if os.path.exists(path):
+
+        with open(path, "r") as file:
+
+            results["REINFORCE"] = json.load(file)
+
+
+
+    return results
+
+
+
+
+
+def extract_metrics(results):
+
+    metrics = {}
 
 
     for algorithm, runs in results.items():
 
 
-        rewards = [
+        if isinstance(runs, dict):
 
-            run["average_reward"]
-
-            for run in runs
-
-        ]
-
-
-        experiments = range(
-
-            1,
-
-            len(rewards)+1
-
-        )
+            runs = [runs]
 
 
 
-        plt.plot(
+        rewards = []
 
-            experiments,
+        violations = []
 
-            rewards,
-
-            marker="o",
-
-            label=algorithm
-
-        )
+        completion = []
 
 
 
-    plt.xlabel(
-        "Experiment Run"
-    )
+        for run in runs:
 
 
-    plt.ylabel(
-        "Average Reward"
-    )
+            rewards.append(
+
+                run.get(
+                    "average_reward",
+                    0
+                )
+
+            )
 
 
-    plt.title(
-        "RL Hyperparameter Experiment Reward Curves"
-    )
+            violations.append(
+
+                run.get(
+                    "average_violations",
+                    0
+                )
+
+            )
 
 
-    plt.legend()
+            completion.append(
 
+                run.get(
+                    "mission_completion_rate",
+                    0
+                )
 
-    plt.grid()
-
-
-    plt.savefig(
-
-        f"{OUTPUT_PATH}/reward_curves.png"
-
-    )
-
-
-    plt.close()
-
-
-
-
-def plot_algorithm_comparison(results):
-
-
-    algorithms = []
-
-    averages = []
+            )
 
 
 
-    for algorithm, runs in results.items():
+        metrics[algorithm] = {
 
 
-        algorithms.append(
-            algorithm
-        )
+            "reward":
+
+                np.mean(rewards),
 
 
-        reward = sum(
+            "violations":
 
-            run["average_reward"]
-
-            for run in runs
-
-        ) / len(runs)
+                np.mean(violations),
 
 
+            "completion":
 
-        averages.append(
-            reward
-        )
+                np.mean(completion)
+
+        }
+
+
+    return metrics
+
+
+
+
+
+def save_bar_chart(
+    values,
+    title,
+    ylabel,
+    filename
+):
+
+
+    algorithms = list(values.keys())
+
+    scores = list(values.values())
 
 
 
     plt.figure(
-
         figsize=(8,5)
-
     )
-
 
 
     plt.bar(
-
         algorithms,
-
-        averages
-
-    )
-
-
-
-    plt.xlabel(
-        "Algorithm"
-    )
-
-
-    plt.ylabel(
-        "Average Reward"
+        scores
     )
 
 
     plt.title(
-        "Final RL Algorithm Comparison"
+        title
     )
 
 
-    plt.grid(
-        axis="y"
+    plt.ylabel(
+        ylabel
     )
+
+
+    plt.xticks(
+        rotation=45
+    )
+
+
+    plt.tight_layout()
 
 
 
     plt.savefig(
 
-        f"{OUTPUT_PATH}/algorithm_comparison.png"
+        f"{OUTPUT_PATH}/{filename}",
+
+        dpi=300
 
     )
 
@@ -222,126 +230,136 @@ def plot_algorithm_comparison(results):
 
 
 
-
-def plot_convergence(results):
-
-
-    plt.figure(
-
-        figsize=(10,6)
-
-    )
-
-
-
-    for algorithm, runs in results.items():
-
-
-        rewards = [
-
-            run["average_reward"]
-
-            for run in runs
-
-        ]
-
-
-        cumulative = []
-
-
-        total = 0
-
-
-
-        for reward in rewards:
-
-
-            total += reward
-
-            cumulative.append(total)
-
-
-
-        plt.plot(
-
-            cumulative,
-
-            label=algorithm
-
-        )
-
-
-
-    plt.xlabel(
-        "Experiment"
-    )
-
-
-    plt.ylabel(
-        "Cumulative Reward"
-    )
-
-
-    plt.title(
-        "RL Training Convergence"
-    )
-
-
-    plt.legend()
-
-
-    plt.grid()
-
-
-
-    plt.savefig(
-
-        f"{OUTPUT_PATH}/convergence_plot.png"
-
-    )
-
-
-    plt.close()
-
-
-
-
-def generate_all_plots():
-
+def generate_plots():
 
     results = load_results()
 
 
+    if not results:
 
-    plot_reward_curves(
+        print(
+            "No evaluation results found."
+        )
 
-        results
+        return
+
+
+
+    metrics = extract_metrics(results)
+
+
+
+    # ------------------------------
+    # Reward comparison
+    # ------------------------------
+
+    save_bar_chart(
+
+        {
+            k:v["reward"]
+
+            for k,v in metrics.items()
+
+        },
+
+        "Average Reward Comparison",
+
+        "Average Reward",
+
+        "reward_comparison.png"
 
     )
 
 
-    plot_algorithm_comparison(
 
-        results
+    # ------------------------------
+    # Completion comparison
+    # ------------------------------
+
+    save_bar_chart(
+
+        {
+            k:v["completion"]
+
+            for k,v in metrics.items()
+
+        },
+
+        "Mission Completion Rate",
+
+        "Completion Rate",
+
+        "completion_comparison.png"
 
     )
 
 
-    plot_convergence(
 
-        results
+    # ------------------------------
+    # Violation comparison
+    # ------------------------------
+
+    save_bar_chart(
+
+        {
+            k:v["violations"]
+
+            for k,v in metrics.items()
+
+        },
+
+        "Noise Violation Detection",
+
+        "Average Violations Found",
+
+        "violation_comparison.png"
+
+    )
+
+
+
+    # ------------------------------
+    # Overall comparison
+    # ------------------------------
+
+    overall = {}
+
+    for algorithm, value in metrics.items():
+
+        overall[algorithm] = (
+
+            value["reward"]
+
+            +
+
+            value["violations"] * 50
+
+        )
+
+
+
+    save_bar_chart(
+
+        overall,
+
+        "Overall RL Algorithm Performance",
+
+        "Performance Score",
+
+        "algorithm_comparison.png"
 
     )
 
 
 
     print(
-        "Advanced plots generated"
+        "Advanced plots generated successfully."
     )
+
 
 
 
 
 if __name__ == "__main__":
 
-    generate_all_plots()
+    generate_plots()
