@@ -87,7 +87,7 @@ def train_ppo():
 
     model.learn(
 
-        total_timesteps=50000,
+        total_timesteps=200000,
 
         callback=eval_callback
 

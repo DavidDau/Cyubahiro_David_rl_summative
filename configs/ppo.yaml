@@ -1,5 +1,6 @@
-# PPO Hyperparameters
 algorithm: PPO
+
+policy: MlpPolicy
 
 learning_rate: 0.0003
 
@@ -15,8 +16,10 @@ gae_lambda: 0.95
 
 clip_range: 0.2
 
-entropy_coefficient: 0.01
+entropy_coefficient: 0.02
 
-total_timesteps: 50000
+vf_coef: 0.5
 
-evaluation_frequency: 5000
+max_grad_norm: 0.5
+
+total_timesteps: 200000

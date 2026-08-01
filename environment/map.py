@@ -49,7 +49,6 @@ class InspectionZone:
 
     inspected: bool = False
 
-    # Noise violation tracking
     violation_detected: bool = False
 
     has_violation: bool = False
