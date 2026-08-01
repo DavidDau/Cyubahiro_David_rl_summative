@@ -1,5 +1,14 @@
 """
-Generate hyperparameter tables for report.
+Generate report tables from RL experiment results.
+
+Creates CSV tables for:
+- DQN
+- PPO
+- A2C
+- REINFORCE
+
+Output:
+assets/report_tables/
 """
 
 import os
@@ -21,33 +30,59 @@ os.makedirs(
 
 
 
-def save_table(
+def generate_table(
     algorithm,
     results
 ):
+    """
+    Convert experiment results into CSV table.
+    """
+
 
     rows = []
 
 
-    for item in results:
+    # Handle dictionary results
+    if isinstance(results, dict):
+
+        results = [results]
+
+
+
+    for index, item in enumerate(results):
+
 
         row = {
 
-            "Run":
-                item["run"],
+            "Algorithm":
+                algorithm,
 
-            "Average Reward":
-                round(
-                    item["average_reward"],
-                    2
-                )
+            "Run":
+                index + 1
 
         }
 
 
-        for key, value in item["hyperparameters"].items():
 
-            row[key] = value
+        # Add metrics
+
+        for key, value in item.items():
+
+            if key != "hyperparameters":
+
+                row[key] = value
+
+
+
+        # Add hyperparameters if available
+
+        if "hyperparameters" in item:
+
+
+            for key, value in item["hyperparameters"].items():
+
+                row[key] = value
+
 
 
         rows.append(row)
@@ -58,18 +93,60 @@ def save_table(
 
 
 
+    output_file = (
+
+        f"{OUTPUT_PATH}/"
+        f"{algorithm}_hyperparameters.csv"
+
+    )
+
+
+
     df.to_csv(
 
-        f"{OUTPUT_PATH}/{algorithm}_hyperparameters.csv",
+        output_file,
 
         index=False
 
     )
 
 
+
     print(
-        f"{algorithm} table generated"
+        f"Generated: {output_file}"
     )
+
+
+
+
+
+def load_json(filename):
+
+
+    path = os.path.join(
+
+        INPUT_PATH,
+
+        filename
+
+    )
+
+
+    if not os.path.exists(path):
+
+        print(
+            f"Skipping missing file: {path}"
+        )
+
+        return None
+
+
+
+    with open(path, "r") as file:
+
+        return json.load(file)
+
+
 
 
 
@@ -77,53 +154,58 @@ def save_table(
 def generate_all_tables():
 
 
-    # DQN, PPO, A2C
+    # ------------------------------------
+    # Stable Baselines algorithms
+    # ------------------------------------
 
-    with open(
-
-        f"{INPUT_PATH}/all_results.json",
-
-        "r"
-
-    ) as file:
-
-        all_results = json.load(file)
+    all_results = load_json(
+        "all_results.json"
+    )
 
 
+    if all_results:
 
-    for algorithm, results in all_results.items():
 
-        save_table(
+        for algorithm, results in all_results.items():
 
-            algorithm,
+            generate_table(
 
-            results
+                algorithm,
+
+                results
+
+            )
+
+
+
+    # ------------------------------------
+    # REINFORCE
+    # ------------------------------------
+
+    reinforce_results = load_json(
+
+        "reinforce_results.json"
+
+    )
+
+
+    if reinforce_results:
+
+
+        generate_table(
+
+            "REINFORCE",
+
+            reinforce_results
 
         )
 
 
 
-    # REINFORCE
-
-    with open(
-
-        f"{INPUT_PATH}/reinforce_results.json",
-
-        "r"
-
-    ) as file:
-
-        reinforce_results = json.load(file)
-
-
-
-    save_table(
-
-        "REINFORCE",
-
-        reinforce_results
-
+    print(
+        "\nAll report tables generated successfully."
     )
+
 
 
 

@@ -1,18 +1,28 @@
 """
 Evaluation metrics for RL agents.
+
+Supports:
+- PPO
+- DQN
+- A2C
+- REINFORCE
 """
 
 import numpy as np
-
+import torch
 
 
 def evaluate_agent(
     model,
     env,
-    episodes=20
+    episodes=20,
+    algorithm="PPO"
 ):
     """
-    Evaluate trained RL agent performance.
+    Evaluate a trained reinforcement learning agent.
+
+    Returns:
+        Dictionary containing evaluation metrics.
     """
 
     rewards = []
@@ -23,84 +33,109 @@ def evaluate_agent(
 
     episode_lengths = []
 
-
+    inspected_zones = []
 
     for _ in range(episodes):
 
-        obs, _ = env.reset()
+        observation, _ = env.reset()
 
+        terminated = False
 
-        done = False
+        truncated = False
 
         total_reward = 0
 
         steps = 0
 
+        while not (terminated or truncated):
 
+            # ----------------------------------------
+            # Stable-Baselines3 algorithms
+            # ----------------------------------------
 
-        while not done:
+            if algorithm in ["PPO", "DQN", "A2C"]:
 
+                action, _ = model.predict(
+                    observation,
+                    deterministic=True
+                )
 
-            action, _ = model.predict(
-                obs,
-                deterministic=True
-            )
+                if isinstance(action, np.ndarray):
+                    action = action.item()
 
-            if isinstance(action, np.ndarray):
-                action = action.item()
+            # ----------------------------------------
+            # Custom REINFORCE policy
+            # ----------------------------------------
 
-            obs, reward, terminated, truncated, info = env.step(
+            elif algorithm == "REINFORCE":
+
+                state = torch.FloatTensor(
+                    observation
+                )
+
+                with torch.no_grad():
+
+                    probabilities = model(state)
+
+                    action = torch.argmax(
+                        probabilities
+                    ).item()
+
+            else:
+
+                raise ValueError(
+                    f"Unknown algorithm: {algorithm}"
+                )
+
+            observation, reward, terminated, truncated, info = env.step(
                 action
             )
-
 
             total_reward += reward
 
             steps += 1
 
-
-            done = terminated or truncated
-
-
-
-        rewards.append(
-            total_reward
-        )
-
+        rewards.append(total_reward)
 
         violations.append(
             info["violations"]
         )
 
-
         completion_rates.append(
-
-            env._mission_complete()
-
+            float(env._mission_complete())
         )
-
 
         episode_lengths.append(
             steps
         )
 
-
+        inspected_zones.append(
+            env._number_inspected()
+        )
 
     return {
 
-        "average_reward":
-            np.mean(rewards),
+        "average_reward": float(
+            np.mean(rewards)
+        ),
 
-        "reward_std":
-            np.std(rewards),
+        "reward_std": float(
+            np.std(rewards)
+        ),
 
-        "average_violations":
-            np.mean(violations),
+        "average_violations": float(
+            np.mean(violations)
+        ),
 
-        "mission_completion_rate":
-            np.mean(completion_rates),
+        "mission_completion_rate": float(
+            np.mean(completion_rates)
+        ),
 
-        "average_episode_length":
+        "average_episode_length": float(
             np.mean(episode_lengths)
+        ),
 
+        "average_inspected_zones": float(
+            np.mean(inspected_zones)
+        )
     }
