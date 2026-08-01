@@ -44,12 +44,17 @@ class InspectionZone:
     x: float
     y: float
 
+    # Inspection tracking
     visited: bool = False
 
+    inspected: bool = False
+
+    # Noise violation tracking
     violation_detected: bool = False
 
     has_violation: bool = False
 
+    # Connected roads
     neighbours: List[int] = field(
         default_factory=list
     )
@@ -61,7 +66,10 @@ class RoadNetwork:
     """
     Graph representation of Kigali inspection zones.
 
-    Roads store travel distances.
+    Roads store:
+        destination_zone: distance
+
+    Distance represents travel cost.
     """
 
     def __init__(self):
@@ -79,7 +87,7 @@ class RoadNetwork:
 
 
     # --------------------------------------------------
-    # Kigali inspection zones
+    # Create Kigali inspection zones
     # --------------------------------------------------
 
     def _create_zones(self):
@@ -95,7 +103,6 @@ class RoadNetwork:
                 9
             ),
 
-
             1: InspectionZone(
                 1,
                 "Kimihurura",
@@ -104,7 +111,6 @@ class RoadNetwork:
                 6,
                 8
             ),
-
 
             2: InspectionZone(
                 2,
@@ -115,7 +121,6 @@ class RoadNetwork:
                 7
             ),
 
-
             3: InspectionZone(
                 3,
                 "Amahoro",
@@ -124,7 +129,6 @@ class RoadNetwork:
                 9,
                 5
             ),
-
 
             4: InspectionZone(
                 4,
@@ -135,7 +139,6 @@ class RoadNetwork:
                 3
             ),
 
-
             5: InspectionZone(
                 5,
                 "Kanombe",
@@ -144,7 +147,6 @@ class RoadNetwork:
                 12,
                 1
             ),
-
 
             6: InspectionZone(
                 6,
@@ -155,7 +157,6 @@ class RoadNetwork:
                 3
             ),
 
-
             7: InspectionZone(
                 7,
                 "Nyamirambo",
@@ -165,7 +166,6 @@ class RoadNetwork:
                 2
             ),
 
-
             8: InspectionZone(
                 8,
                 "Nyarugenge",
@@ -174,7 +174,6 @@ class RoadNetwork:
                 1,
                 5
             ),
-
 
             9: InspectionZone(
                 9,
@@ -189,9 +188,8 @@ class RoadNetwork:
 
 
 
-
     # --------------------------------------------------
-    # Road connections
+    # Create road network
     # --------------------------------------------------
 
     def _create_roads(self):
@@ -203,54 +201,45 @@ class RoadNetwork:
                 9: 4.0
             },
 
-
             1: {
                 0: 3.5,
                 2: 2.8,
                 6: 5.2
             },
 
-
             2: {
                 1: 2.8,
                 3: 3.1
             },
-
 
             3: {
                 2: 3.1,
                 4: 2.5
             },
 
-
             4: {
                 3: 2.5,
                 5: 3.8
             },
 
-
             5: {
                 4: 3.8
             },
-
 
             6: {
                 1: 5.2,
                 7: 2.9
             },
 
-
             7: {
                 6: 2.9,
                 8: 3.0
             },
 
-
             8: {
                 7: 3.0,
                 9: 2.6
             },
-
 
             9: {
                 8: 2.6,
@@ -272,15 +261,15 @@ class RoadNetwork:
 
 
     # --------------------------------------------------
-    # Environment functions
+    # Environment helper functions
     # --------------------------------------------------
 
     def generate_noise_events(self):
 
         """
-        Randomly generates hidden violations.
+        Generate hidden noise violations.
 
-        The agent discovers these only after inspection.
+        Agent discovers them only after inspection.
         """
 
         for zone in self.zones.values():
@@ -295,12 +284,37 @@ class RoadNetwork:
 
 
 
+    def inspect_zone(
+        self,
+        zone_id: int
+    ):
+
+        """
+        Reveal whether a zone violates noise limits.
+        """
+
+        zone = self.zones[zone_id]
+
+        zone.inspected = True
+
+        zone.visited = True
+
+        if zone.has_violation:
+
+            zone.violation_detected = True
+
+        return zone.has_violation
+
+
+
+
     def get_zone(
         self,
         zone_id: int
     ):
 
         return self.zones[zone_id]
+
 
 
 
@@ -313,12 +327,14 @@ class RoadNetwork:
 
 
 
+
     def get_neighbours(
         self,
         zone_id: int
     ):
 
         return self.zones[zone_id].neighbours
+
 
 
 
@@ -332,9 +348,11 @@ class RoadNetwork:
 
 
 
+
     def number_of_zones(self):
 
         return len(self.zones)
+
 
 
 
@@ -344,9 +362,12 @@ class RoadNetwork:
 
             zone.visited = False
 
+            zone.inspected = False
+
             zone.violation_detected = False
 
             zone.has_violation = False
+
 
 
 
