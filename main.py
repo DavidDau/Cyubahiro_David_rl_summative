@@ -8,18 +8,52 @@ Runs:
 - Visualization
 """
 
-import time
 import os
+import time
+
+import torch
+import torch.nn as nn
 
 from stable_baselines3 import PPO, DQN, A2C
 
-
 from environment.custom_env import NoiseInspectionEnv
-
 from environment.rendering import NoiseRenderer
 
 
+# --------------------------------------------------
+# REINFORCE Policy Network
+# --------------------------------------------------
 
+class PolicyNetwork(nn.Module):
+
+    def __init__(self, state_size, action_size):
+
+        super().__init__()
+
+        self.network = nn.Sequential(
+
+            nn.Linear(state_size, 64),
+
+            nn.ReLU(),
+
+            nn.Linear(64, 64),
+
+            nn.ReLU(),
+
+            nn.Linear(64, action_size),
+
+            nn.Softmax(dim=-1)
+
+        )
+
+    def forward(self, state):
+
+        return self.network(state)
+
+
+# --------------------------------------------------
+# Model paths
+# --------------------------------------------------
 
 MODEL_PATHS = {
 
@@ -27,188 +61,137 @@ MODEL_PATHS = {
 
     "DQN": "models/dqn/best_model",
 
-    "A2C": "models/a2c/best_model"
+    "A2C": "models/a2c/best_model",
+
+    "REINFORCE": "models/reinforce/noise_reinforce.pth"
 
 }
 
 
+# --------------------------------------------------
+# Load agent
+# --------------------------------------------------
 
-
-def load_agent(
-    algorithm="PPO"
-):
-
-    path = MODEL_PATHS[algorithm]
-
-
-    if not os.path.exists(
-        path + ".zip"
-    ):
-
-        raise FileNotFoundError(
-
-            f"Model not found: {path}"
-
-        )
-
+def load_agent(algorithm, env):
 
     if algorithm == "PPO":
 
-        model = PPO.load(
-            path
-        )
-
+        return PPO.load(MODEL_PATHS["PPO"])
 
     elif algorithm == "DQN":
 
-        model = DQN.load(
-            path
-        )
-
+        return DQN.load(MODEL_PATHS["DQN"])
 
     elif algorithm == "A2C":
 
-        model = A2C.load(
-            path
+        return A2C.load(MODEL_PATHS["A2C"])
+
+    elif algorithm == "REINFORCE":
+
+        state_size = env.observation_space.shape[0]
+
+        action_size = env.action_space.n
+
+        model = PolicyNetwork(
+            state_size,
+            action_size
         )
 
+        model.load_state_dict(
+            torch.load(
+                MODEL_PATHS["REINFORCE"],
+                map_location=torch.device("cpu")
+            )
+        )
+
+        model.eval()
+
+        return model
 
     else:
 
-        raise ValueError(
-            "Unsupported algorithm"
-        )
+        raise ValueError("Unsupported algorithm")
 
 
-    return model
+# --------------------------------------------------
+# Simulation
+# --------------------------------------------------
 
-
-
-
-def run_simulation(
-    algorithm="PPO"
-):
-
+def run_simulation(algorithm="PPO"):
 
     env = NoiseInspectionEnv()
 
-
-
-    model = load_agent(
-        algorithm
-    )
-
-
-
     renderer = NoiseRenderer()
-
-
 
     observation, info = env.reset()
 
-
+    model = load_agent(
+        algorithm,
+        env
+    )
 
     done = False
 
-
-
     total_reward = 0
 
-
-
-    print(
-        f"Running {algorithm} agent"
-    )
-
-
+    print(f"Running {algorithm} agent")
 
     while not done:
 
+        if algorithm == "REINFORCE":
 
-        action, _ = model.predict(
+            state = torch.FloatTensor(
+                observation
+            )
 
-            observation,
+            with torch.no_grad():
 
-            deterministic=True
+                probabilities = model(state)
 
-        )
+            action = torch.argmax(
+                probabilities
+            ).item()
 
+        else:
+
+            action, _ = model.predict(
+                observation,
+                deterministic=True
+            )
 
         observation, reward, terminated, truncated, info = env.step(
-
             action
-
         )
-
-
-
-        total_reward += reward
-
-
 
         done = terminated or truncated
 
-
-
-        current_zone = env.current_zone
-
-
+        total_reward += reward
 
         renderer.draw_network(
-
-            current_zone=current_zone
-
+            current_zone=env.current_zone
         )
-
-
 
         print(
-
-            "Zone:",
-
-            current_zone,
-
-            "| Reward:",
-
-            reward,
-
-            "| Total:",
-
-            total_reward
-
+            f"Zone: {env.current_zone} | "
+            f"Reward: {reward} | "
+            f"Total: {total_reward}"
         )
 
+        time.sleep(0.5)
 
+    print("\nMission completed")
 
-        time.sleep(
-            0.5
-        )
-
-
-
-    print(
-        "Mission completed"
-    )
-
-
-    print(
-        "Final reward:",
-        total_reward
-    )
-
-
+    print(f"Final reward: {total_reward}")
 
     renderer.close()
 
 
-
-
+# --------------------------------------------------
+# Entry
+# --------------------------------------------------
 
 if __name__ == "__main__":
 
-
     run_simulation(
-
-        algorithm="PPO"
-
+        algorithm="REINFORCE"
     )
